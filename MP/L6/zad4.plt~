@@ -1,0 +1,12 @@
+#lang racket
+
+(define (neg-nnf x)
+  (cond ((not (list? x)) ; base case
+         (if x (list 'not x) x))
+        ((eq? (car x) 'and) ; negation of conjunction
+         (cons 'or (map neg-nnf (cdr x))))
+        ((eq? (car x) 'or) ; negation of disjunction
+         (cons 'and (map neg-nnf (cdr x))))
+        ((eq? (car x) 'not) ; double negation elimination
+         (neg-nnf (cadr x)))
+        (else x))) ; atomic proposition

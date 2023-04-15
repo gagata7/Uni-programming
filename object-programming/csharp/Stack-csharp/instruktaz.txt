@@ -1,0 +1,6 @@
+1. Napisać bibliotekę (np. implementację listy).
+2. Skompilować bibliotekę: mono-csc <nazwa_biblioteki>.cs -target:library
+3. Napisać program używający bibliotekę.
+4. Skompilować program ze zlinkowaniem razem z biblioteką: mono-csc <nazwa_programu>.cs -r:<nazwa_biblioteki>.dll
+5. Odpalić: mono <nazwa_programu>.exe
+(być może wielkość znaków ma znaczenie)

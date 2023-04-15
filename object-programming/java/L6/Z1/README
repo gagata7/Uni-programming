@@ -1,0 +1,9 @@
+UWAGA Jeśli w terminalu jest nakładka ZSH to będzie wypisywało na końcu linii '%'
+
+Jak skompilować: javac zad1.java
+
+Jak odpalić: java zad1
+
+Ewentualnie można sprawdzić zawartość pliku do zapisu w pamięci: 
+
+cat plik_do_zapisu.txt

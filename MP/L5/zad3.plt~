@@ -1,0 +1,42 @@
+#lang plait
+
+;apply jest typu (('a -> 'b) 'a -> 'b)
+( define ( apply f x ) ( f x ) )
+
+;compose jest typu (('a -> 'b) ('c -> 'a) -> ('c -> 'b))
+( define ( compose f g ) ( lambda ( x ) ( f ( g x ) ) ) )
+
+;flip jest typu (('a 'b -> 'c) -> ('b 'a -> 'c))
+( define ( flip f ) ( lambda ( x y ) ( f y x ) ) )
+
+;curry jest typu (('a 'b -> 'c) -> ('a -> ('b -> 'c)))
+( define ( curry f ) ( lambda ( x ) ( lambda ( y ) ( f x y ) ) ) )
+
+;(curry compose)
+;curry ma typ (('a 'b -> 'c) -> ('a -> ('b -> 'c)))
+;compose ma typ (('x -> 'y) ('z -> 'x) -> ('z -> 'y))
+;zatem
+;funkcja curry dostanie jako argument funkcję compose
+;czyli 'a = ('x -> 'y), 'b = ('z -> 'x), 'c = ('z -> 'y)
+;i zwróci 'a -> ('b -> 'c) czyli jak podstawimy spowrotem za 'a, 'b i 'c to:
+;('x -> 'y) -> (('z -> 'x) -> ('z -> 'y))
+;a to się zgadza bo plait zwróci:
+;(('_a -> '_b) -> (('_c -> '_a) -> ('_c -> '_b)))
+
+;((curry compose) (curry compose))
+;(curry compose) ma typ: ('_x -> '_y) -> (('_z -> '_x) -> ('_z -> '_y))
+; i chcę to podstawic do (curry compose) więc:
+;pierwszy argument ma typ: ('a -> 'b) więc a = ('_x -> '_y) oraz
+; b = (('_z -> '_x) -> ('_z -> '_y))
+;zwracany typ to: (('_c -> '_a) -> ('_c -> '_b))) więc podstawiam za a i b:
+;('_c -> ('_x -> '_y)) -> ('_c ->(('_z -> '_x) -> ('_z -> '_y)) )
+; i to się zgadza, bo racket zwraca:
+;(('_a -> ('_b -> '_c)) -> ('_a -> (('_d -> '_b) -> ('_d -> '_c))))
+
+;(compose curry flip)
+;compose dostaje 2 argumenty: curry typu ('a -> 'b) i flip ('c -> 'a)
+;zatem dla curry 'a = ('x1 'y1 -> 'z1) 'b = ('x1 -> ('y1 -> 'z1))
+;dla flip: 'c = ('x2 'y2 -> 'z2) i 'a = ('y2 'x2 -> 'z2)
+;compose zwraca ('c -> 'b) zatem podstawiając odpowiednio za c i b:
+;('x2 'y2 -> 'z2) ->('x1 -> ('y1 -> 'z1))
+

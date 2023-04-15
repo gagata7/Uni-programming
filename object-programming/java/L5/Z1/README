@@ -1,0 +1,5 @@
+1) javac zad1.java - kompilacja
+2) java zad1 - uruchomienie
+
+W pliku zad1.java, jest klasa zad1 a w niej funkcja main ilustrująca możliwości programu.
+
