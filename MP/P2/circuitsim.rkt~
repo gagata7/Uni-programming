@@ -1,0 +1,126 @@
+#lang racket
+(require data/heap)
+
+;Komparator do heapa ----------------------------------------------------------------
+
+(define komparator (lambda (para1 para2) (< (car para1) (car para2))))
+
+;Symulacja --------------------------------------------------------------------------
+
+(struct sim (queue t) #:mutable #:transparent)
+;queue - przechowuje zdarzenia w symulacji, t - to obecny czas symulacji
+
+(define make-sim (sim (make-heap komparator) 0))
+;tworzy nową symulację w której na razie nie ma zdarzeń i czas = 0
+
+(define (sim-time sim) (sim-t sim))
+;zwraca ile czasu upłynęło w konkretnej symulacji
+
+(define (sim-wait! sim delta) ;aktualizuje czas symulacji o delta-jednostek
+  (set-sim-t! sim (+ (sim-time sim) delta)))
+
+(define (sim-add-action! sim delay action)
+  (let ((event-time (+ (sim-time sim) delay)))
+    (heap-add! (sim-queue sim) (cons event-time (lambda () (action))))))
+;wkłada na stertę konkretnej symulacji, parę: akcję i jej czas wykonania
+
+
+;Przewody ---------------------------------------------------------------------------
+
+(struct wire (sim val observers) #:mutable #:transparent)
+;val - to wart. logiczna kabelka, observers to funkcje które są wywoływane
+;gdy wartość kabelka się zmieni
+
+(define (make-wire sim) (wire #f '()))
+;tworzenie nowego kabelka
+
+(define (wire-on-change! wire action)
+  (set-wire-observers! wire (cons action (wire-observers wire))))
+;podpinam do tego kabelka jakąś akcję
+
+(define (wire-value wire) (wire-val wire));zwraca wartość kabelka
+
+(define (wire-set! wire value)
+  (when (not (eq? value (wire-value wire))) ;jesli zmieniam na cos innego co bylo wczesniej
+    (set-wire-val! wire value) ;ustaw taka wartosc kabelkowi
+    (for-each (lambda (observer) (observer value)) (wire-observers wire))
+    ;wykonaj wszystkie podpiete do niego operacje
+  )
+)
+
+;Tworzenie przewodu z tworzeniem bramki która nim steruje-----------------------------
+
+(define (wire-not in)
+  (let ((out (make-wire (wire-sim in))))
+    (gate-not out in)
+    out))
+
+(define (wire-and in1 in2)
+  (let ((out (make-wire (wire-sim in1))))
+    (gate-and out in1 in2)
+    out))
+
+(define (wire-nand in1 in2)
+  (let ((out (make-wire (wire-sim in1))))
+    (gate-nand out in1 in2)
+    out))
+
+(define (wire-or in1 in2)
+  (let ((out (make-wire (wire-sim in1))))
+    (gate-or out in1 in2)
+    out))
+
+(define (wire-nor in1 in2)
+  (let ((out (make-wire (wire-sim in1))))
+    (gate-nor out in1 in2)
+    out))
+
+(define (wire-xor in1 in2)
+  (let ((out (make-wire (wire-sim in1))))
+    (gate-xor out in1 in2)
+    out))
+
+;Bramki logiczne --------------------------------------------------------------------
+
+(define (gate-not out in)
+  (wire-not in out))
+
+(define (gate-and out in1 in2)
+  (define w (make-wire (wire-sim out)))
+  (wire-and in1 in2 w)
+  (wire-on-change! w (lambda (value) (wire-set! out value))))
+
+(define (gate-nand out in1 in2)
+  (define w (make-wire (wire-sim out)))
+  (wire-nand in1 in2 w)
+  (wire-on-change! w (lambda (value) (wire-set! out value))))
+
+(define (gate-or out in1 in2)
+  (define w (make-wire (wire-sim out)))
+  (wire-or in1 in2 w)
+  (wire-on-change! w (lambda (value) (wire-set! out value))))
+
+(define (gate-nor out in1 in2)
+  (define w (make-wire (wire-sim out)))
+  (wire-nor in1 in2 w)
+  (wire-on-change! w (lambda (value) (wire-set! out value))))
+
+(define (gate-xor out in1 in2)
+  (define w1 (make-wire (wire-sim out)))
+  (define w2 (make-wire (wire-sim out)))
+  (define w3 (make-wire (wire-sim out)))
+  (wire-and in1 (wire-not in2 w1))
+  (wire-and (wire-not in1 w2) in2)
+  (wire-or w1 w2 w3)
+  (wire-on-change! w3 (lambda (value) (wire-set! out value))))
+
+;; Flip-flop (przerzutnik) ----------------------------------------------------------
+;(define (flip-flop out clk data)
+;  (define sim (wire-sim data))
+;  (define w1  (make-wire sim))
+;  (define w2  (make-wire sim))
+;  (define w3  (make-wire sim))
+;  (wire-and w1 clk w1)
+;  (wire-nand w1 w2 w3)
+;  (wire-nand w3 data w2)
+;  (wire-nand out w1 (wire-nand out w3)))

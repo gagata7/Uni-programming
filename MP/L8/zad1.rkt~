@@ -1,0 +1,5 @@
+#lang racket
+
+(define x (mcons (mcons (mcons 1 2) 3) (mcar x)))
+
+(define a (mcons 1 (mcons 2 (mcons 3 a))))
